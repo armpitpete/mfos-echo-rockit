@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg: #15110c;
   --panel: #d4c29a;
   --panel-deep: #bda66f;
@@ -326,7 +326,6 @@ select {
   }
 }
 
-
 /* v0.3 — hardware-style range controls */
 
 .panel-control {
@@ -401,4 +400,37 @@ select {
 .panel-control input[type="range"]:focus-visible {
   outline: 3px solid rgba(178, 58, 37, 0.45);
   outline-offset: 4px;
+}
+
+/* v0.7 — MIDI controls */
+
+.midi-button {
+  width: 100%;
+  border: 3px solid var(--panel-dark);
+  background: #251b13;
+  color: var(--paper);
+  padding: 10px 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.midi-button[aria-pressed="true"] {
+  background: var(--accent);
+}
+
+.midi-button:disabled,
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.midi-selects {
+  margin-top: 13px;
+}
+
+.midi-status {
+  min-height: 70px;
+  margin-top: 13px;
 }
