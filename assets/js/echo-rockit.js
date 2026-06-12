@@ -2,6 +2,9 @@ const state = {
   ctx: null,
   osc: null,
   resOsc: null,
+  noise: null,
+  noiseFilter: null,
+  noiseGain: null,
   inputGain: null,
   resGain: null,
   filter: null,
@@ -44,6 +47,21 @@ function number(control) {
   return Number(control.value);
 }
 
+function createNoiseSource(ctx) {
+  const seconds = 2;
+  const buffer = ctx.createBuffer(1, ctx.sampleRate * seconds, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+
+  for (let i = 0; i < data.length; i += 1) {
+    data[i] = Math.random() * 2 - 1;
+  }
+
+  const source = ctx.createBufferSource();
+  source.buffer = buffer;
+  source.loop = true;
+  return source;
+}
+
 function createAudioGraph() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   const ctx = new AudioContextClass();
@@ -53,6 +71,15 @@ function createAudioGraph() {
 
   const resOsc = ctx.createOscillator();
   resOsc.type = "sine";
+
+  const noise = createNoiseSource(ctx);
+  const noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = "bandpass";
+  noiseFilter.frequency.value = 1800;
+  noiseFilter.Q.value = 0.55;
+
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.value = 0;
 
   const inputGain = ctx.createGain();
   const resGain = ctx.createGain();
@@ -78,6 +105,10 @@ function createAudioGraph() {
   resOsc.connect(resGain);
   resGain.connect(filter);
 
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(wetGain);
+
   filter.connect(dryGain);
   dryGain.connect(outputGain);
 
@@ -92,10 +123,14 @@ function createAudioGraph() {
 
   osc.start();
   resOsc.start();
+  noise.start();
 
   state.ctx = ctx;
   state.osc = osc;
   state.resOsc = resOsc;
+  state.noise = noise;
+  state.noiseFilter = noiseFilter;
+  state.noiseGain = noiseGain;
   state.inputGain = inputGain;
   state.resGain = resGain;
   state.filter = filter;
@@ -140,13 +175,18 @@ function applyControls() {
   const wobbleDepth = Math.max(0, Math.min(1, (cleanDelay - 0.12) / 0.56));
   const wobble = Math.sin(state.wobblePhase * Math.PI * 2) * 0.006 * wobbleDepth;
   const moddedDelay = Math.max(0.02, Math.min(1.0, cleanDelay + wobble));
-  const darkness = moddedDelay / 0.68;
+  const darkness = Math.max(0, Math.min(1, moddedDelay / 0.68));
   const delayToneHz = Math.max(850, 5200 - darkness * 3600);
   const safeRepeat = Math.min(number(controls.echoRepeat), 0.78);
+  const grainAmount = darkness * darkness;
+  const noiseGrainGain = grainAmount * (0.0015 + safeRepeat * 0.0025);
+  const noiseToneHz = 950 + darkness * 1700;
 
   state.osc.frequency.setTargetAtTime(number(controls.oscRate), now, 0.015);
   state.resOsc.frequency.setTargetAtTime(moddedCutoff, now, 0.02);
   state.resGain.gain.setTargetAtTime(selfResGain, now, 0.025);
+  state.noiseFilter.frequency.setTargetAtTime(noiseToneHz, now, 0.05);
+  state.noiseGain.gain.setTargetAtTime(noiseGrainGain, now, 0.05);
   state.inputGain.gain.setTargetAtTime(number(controls.inputLevel) * micBoost * oscEnabled * 0.18, now, 0.015);
   state.filter.frequency.setTargetAtTime(moddedCutoff, now, 0.02);
   state.filter.Q.setTargetAtTime(resAmount, now, 0.02);
