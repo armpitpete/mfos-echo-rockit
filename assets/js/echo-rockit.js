@@ -19,6 +19,8 @@ const state = {
   midiInput: null,
   midiOutput: null,
   midiEnabled: false,
+  midiLearning: false,
+  midiLearnedCc: {},
   midiNote: null,
   midiVelocity: 0,
   lfoPhase: 0,
@@ -51,7 +53,20 @@ const controls = {
   midiEnableButton: $("midiEnableButton"),
   midiInSelect: $("midiInSelect"),
   midiOutSelect: $("midiOutSelect"),
+  midiLearnTarget: $("midiLearnTarget"),
+  midiLearnButton: $("midiLearnButton"),
+  midiClearLearnButton: $("midiClearLearnButton"),
   midiStatus: $("midiStatus"),
+};
+
+const MIDI_LEARN_STORAGE_KEY = "mfosEchoRockitMidiLearnV1";
+
+const DEFAULT_MIDI_CC_MAP = {
+  1: "vcfMod",
+  12: "echoVolume",
+  13: "echoRepeat",
+  71: "resonance",
+  74: "cutoff",
 };
 
 function number(control) {
@@ -73,12 +88,106 @@ function setMidiStatus(message) {
   }
 }
 
+function getMidiTargetLabel(targetId) {
+  const option = controls.midiLearnTarget?.querySelector(`option[value="${targetId}"]`);
+  return option ? option.textContent : targetId;
+}
+
+function loadLearnedMidiMappings() {
+  try {
+    const saved = window.localStorage.getItem(MIDI_LEARN_STORAGE_KEY);
+    if (!saved) return {};
+
+    const parsed = JSON.parse(saved);
+    if (!parsed || typeof parsed !== "object") return {};
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(([cc, targetId]) => {
+        return Number.isInteger(Number(cc)) && Boolean(controls[targetId]);
+      }),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function saveLearnedMidiMappings() {
+  try {
+    window.localStorage.setItem(MIDI_LEARN_STORAGE_KEY, JSON.stringify(state.midiLearnedCc));
+  } catch {
+    setMidiStatus("Could not save MIDI Learn mappings in this browser.");
+  }
+}
+
 function setControlFromMidi(control, value) {
   const min = Number(control.min ?? 0);
   const max = Number(control.max ?? 1);
   const scaled = min + (value / 127) * (max - min);
   control.value = String(scaled);
   control.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function updateMidiLearnButton() {
+  if (!controls.midiLearnButton) return;
+
+  controls.midiLearnButton.setAttribute("aria-pressed", state.midiLearning ? "true" : "false");
+  controls.midiLearnButton.textContent = state.midiLearning ? "Waiting for CC" : "Learn Next CC";
+}
+
+function startMidiLearn() {
+  if (!state.midiEnabled) {
+    setMidiStatus("Enable MIDI first, then press Learn Next CC.");
+    return;
+  }
+
+  const targetId = controls.midiLearnTarget.value;
+  if (!controls[targetId]) {
+    setMidiStatus("Choose a valid MIDI Learn target.");
+    return;
+  }
+
+  if (state.midiLearning) {
+    state.midiLearning = false;
+    updateMidiLearnButton();
+    setMidiStatus("MIDI Learn cancelled.");
+    return;
+  }
+
+  state.midiLearning = true;
+  updateMidiLearnButton();
+  setMidiStatus(`Move a MIDI CC control to learn ${getMidiTargetLabel(targetId)}.`);
+}
+
+function finishMidiLearn(controller, value) {
+  const targetId = controls.midiLearnTarget.value;
+  const targetControl = controls[targetId];
+
+  state.midiLearning = false;
+  updateMidiLearnButton();
+
+  if (!targetControl) {
+    setMidiStatus("MIDI Learn failed: target control missing.");
+    return;
+  }
+
+  state.midiLearnedCc[String(controller)] = targetId;
+  saveLearnedMidiMappings();
+  setControlFromMidi(targetControl, value);
+  setMidiStatus(`Learned CC ${controller} -> ${getMidiTargetLabel(targetId)}.`);
+}
+
+function clearLearnedMidiMappings() {
+  state.midiLearnedCc = {};
+  state.midiLearning = false;
+  updateMidiLearnButton();
+
+  try {
+    window.localStorage.removeItem(MIDI_LEARN_STORAGE_KEY);
+  } catch {
+    // Ignore local storage failures when clearing.
+  }
+
+  setMidiStatus("Learned CC mappings cleared. Default CC mappings restored.");
 }
 
 function createNoiseSource(ctx) {
@@ -390,15 +499,14 @@ function handleMidiMessage(message) {
 }
 
 function handleMidiCc(controller, value) {
-  const ccMap = {
-    1: controls.vcfMod,
-    12: controls.echoVolume,
-    13: controls.echoRepeat,
-    71: controls.resonance,
-    74: controls.cutoff,
-  };
+  if (state.midiLearning) {
+    finishMidiLearn(controller, value);
+    return;
+  }
 
-  const control = ccMap[controller];
+  const learnedTargetId = state.midiLearnedCc[String(controller)];
+  const targetId = learnedTargetId || DEFAULT_MIDI_CC_MAP[controller];
+  const control = targetId ? controls[targetId] : null;
 
   if (!control) {
     setMidiStatus(`CC ${controller} received`);
@@ -406,7 +514,8 @@ function handleMidiCc(controller, value) {
   }
 
   setControlFromMidi(control, value);
-  setMidiStatus(`CC ${controller} -> ${control.id}`);
+  const source = learnedTargetId ? "learned" : "default";
+  setMidiStatus(`CC ${controller} -> ${getMidiTargetLabel(targetId)} (${source})`);
 }
 
 async function enableMidi() {
@@ -430,6 +539,9 @@ async function enableMidi() {
   }
 }
 
+state.midiLearnedCc = loadLearnedMidiMappings();
+updateMidiLearnButton();
+
 controls.powerButton.addEventListener("click", () => {
   if (state.powered) {
     powerOff();
@@ -450,8 +562,26 @@ if (controls.midiOutSelect) {
   controls.midiOutSelect.addEventListener("change", selectMidiOutput);
 }
 
+if (controls.midiLearnButton) {
+  controls.midiLearnButton.addEventListener("click", startMidiLearn);
+}
+
+if (controls.midiClearLearnButton) {
+  controls.midiClearLearnButton.addEventListener("click", clearLearnedMidiMappings);
+}
+
 Object.values(controls).forEach((control) => {
-  if (!control || control === controls.powerButton || control === controls.statusBox || control === controls.midiEnableButton || control === controls.midiStatus) return;
+  if (
+    !control ||
+    control === controls.powerButton ||
+    control === controls.statusBox ||
+    control === controls.midiEnableButton ||
+    control === controls.midiLearnButton ||
+    control === controls.midiClearLearnButton ||
+    control === controls.midiLearnTarget ||
+    control === controls.midiStatus
+  ) return;
+
   control.addEventListener("input", applyControls);
   control.addEventListener("change", applyControls);
 });
