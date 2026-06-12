@@ -11,7 +11,7 @@
     <header class="hero">
       <p class="eyebrow">MFOS-inspired software instrument</p>
       <h1>Echo Rockit</h1>
-      <p class="summary">A compact browser sound producer / processor with input level, resonant low-pass filter, echo, LFO modulation, and internal square oscillator.</p>
+      <p class="summary">A compact browser sound producer / processor with input level, resonant low-pass filter, echo, LFO modulation, internal square oscillator, and basic MIDI in/out.</p>
     </header>
 
     <section class="panel" aria-labelledby="panel-title">
@@ -23,8 +23,8 @@
       <div class="panel-body">
         <div class="panel-topline">
           <div>
-            <h2 id="panel-title">Software Prototype v0.6</h2>
-            <p>Very subtle delay noise and grain added behind the darker moving echo path.</p>
+            <h2 id="panel-title">Software Prototype v0.7</h2>
+            <p>Basic MIDI input/output added to the darker moving echo path.</p>
           </div>
           <button class="power-button" id="powerButton" type="button" aria-pressed="false">
             <span class="lamp" aria-hidden="true"></span>
@@ -138,7 +138,27 @@
                 <input id="oscRate" type="range" min="30" max="1400" step="1" value="130" />
               </label>
             </div>
-            <p class="hint">A square-wave exciter feeds the filter.</p>
+            <p class="hint">A square-wave exciter feeds the filter. MIDI notes take over pitch/gate when MIDI is enabled.</p>
+          </section>
+
+          <section class="module midi-module" aria-labelledby="midi-title">
+            <h3 id="midi-title">MIDI</h3>
+            <button class="midi-button" id="midiEnableButton" type="button" aria-pressed="false">Enable MIDI</button>
+            <div class="control-bank two midi-selects">
+              <label class="panel-control">
+                <span>MIDI In</span>
+                <select id="midiInSelect" disabled>
+                  <option value="">No MIDI input</option>
+                </select>
+              </label>
+              <label class="panel-control">
+                <span>MIDI Out</span>
+                <select id="midiOutSelect" disabled>
+                  <option value="">No MIDI output</option>
+                </select>
+              </label>
+            </div>
+            <div class="status-box midi-status" id="midiStatus">MIDI off</div>
           </section>
 
           <section class="module" aria-labelledby="output-title">
