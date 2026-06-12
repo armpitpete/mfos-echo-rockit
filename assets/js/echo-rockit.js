@@ -8,6 +8,7 @@ const state = {
   inputGain: null,
   resGain: null,
   filter: null,
+  vcfCloseGain: null,
   dryGain: null,
   delay: null,
   delayTone: null,
@@ -45,6 +46,11 @@ const controls = {
 
 function number(control) {
   return Number(control.value);
+}
+
+function smoothstep(value) {
+  const clamped = Math.max(0, Math.min(1, value));
+  return clamped * clamped * (3 - 2 * clamped);
 }
 
 function createNoiseSource(ctx) {
@@ -88,6 +94,9 @@ function createAudioGraph() {
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
 
+  const vcfCloseGain = ctx.createGain();
+  vcfCloseGain.gain.value = 1;
+
   const dryGain = ctx.createGain();
   const delay = ctx.createDelay(1.2);
   const delayTone = ctx.createBiquadFilter();
@@ -109,10 +118,12 @@ function createAudioGraph() {
   noiseFilter.connect(noiseGain);
   noiseGain.connect(wetGain);
 
-  filter.connect(dryGain);
+  filter.connect(vcfCloseGain);
+
+  vcfCloseGain.connect(dryGain);
   dryGain.connect(outputGain);
 
-  filter.connect(delay);
+  vcfCloseGain.connect(delay);
   delay.connect(delayTone);
   delayTone.connect(feedback);
   feedback.connect(delay);
@@ -134,6 +145,7 @@ function createAudioGraph() {
   state.inputGain = inputGain;
   state.resGain = resGain;
   state.filter = filter;
+  state.vcfCloseGain = vcfCloseGain;
   state.dryGain = dryGain;
   state.delay = delay;
   state.delayTone = delayTone;
@@ -165,7 +177,8 @@ function applyControls() {
   const delayLfo = lfoValue(controls.delayModShape.value, state.lfoPhase) * number(controls.delayMod);
 
   const baseCutoff = number(controls.cutoff);
-  const moddedCutoff = Math.max(60, Math.min(12000, baseCutoff + vcfLfo * 4200));
+  const moddedCutoff = Math.max(20, Math.min(12000, baseCutoff + vcfLfo * 4200));
+  const vcfOpen = smoothstep((moddedCutoff - 35) / 260);
   const resAmount = number(controls.resonance);
   const selfResAmount = Math.max(0, Math.min(1, (resAmount - 13) / 5));
   const selfResGain = selfResAmount * selfResAmount * 0.055;
@@ -179,7 +192,7 @@ function applyControls() {
   const delayToneHz = Math.max(850, 5200 - darkness * 3600);
   const safeRepeat = Math.min(number(controls.echoRepeat), 0.78);
   const grainAmount = darkness * darkness;
-  const noiseGrainGain = grainAmount * (0.0015 + safeRepeat * 0.0025);
+  const noiseGrainGain = grainAmount * vcfOpen * (0.0015 + safeRepeat * 0.0025);
   const noiseToneHz = 950 + darkness * 1700;
 
   state.osc.frequency.setTargetAtTime(number(controls.oscRate), now, 0.015);
@@ -190,6 +203,7 @@ function applyControls() {
   state.inputGain.gain.setTargetAtTime(number(controls.inputLevel) * micBoost * oscEnabled * 0.18, now, 0.015);
   state.filter.frequency.setTargetAtTime(moddedCutoff, now, 0.02);
   state.filter.Q.setTargetAtTime(resAmount, now, 0.02);
+  state.vcfCloseGain.gain.setTargetAtTime(vcfOpen, now, 0.025);
   state.delay.delayTime.setTargetAtTime(moddedDelay, now, 0.04);
   state.delayTone.frequency.setTargetAtTime(delayToneHz, now, 0.04);
   state.feedback.gain.setTargetAtTime(safeRepeat, now, 0.02);
