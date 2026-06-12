@@ -1,0 +1,160 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MFOS Echo Rockit â€” Software Prototype</title>
+  <link rel="stylesheet" href="assets/css/echo-rockit.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <p class="eyebrow">MFOS-inspired software instrument</p>
+      <h1>Echo Rockit</h1>
+      <p class="summary">A compact browser sound producer / processor with input level, resonant low-pass filter, echo, LFO modulation, and internal square oscillator.</p>
+    </header>
+
+    <section class="panel" aria-labelledby="panel-title">
+      <div class="panel-rail">
+        <span>MFOS</span>
+        <strong>Echo Rockit</strong>
+      </div>
+
+      <div class="panel-body">
+        <div class="panel-topline">
+          <div>
+            <h2 id="panel-title">Software Prototype v0.1</h2>
+            <p>Basic Web Audio path. PT2399 dirt/noise modelling comes later.</p>
+          </div>
+          <button class="power-button" id="powerButton" type="button" aria-pressed="false">
+            <span class="lamp" aria-hidden="true"></span>
+            Power
+          </button>
+        </div>
+
+        <div class="section-grid">
+          <section class="module" aria-labelledby="input-title">
+            <h3 id="input-title">Input</h3>
+            <div class="control-row">
+              <label class="knob-control">
+                <span>Input Level</span>
+                <input id="inputLevel" type="range" min="0" max="1.5" step="0.01" value="0.85" />
+              </label>
+              <label class="switch-control">
+                <span>Mic / Line</span>
+                <select id="micLine">
+                  <option value="line">Line</option>
+                  <option value="mic">Mic</option>
+                </select>
+              </label>
+            </div>
+            <p class="hint">Mic mode adds gain before the filter.</p>
+          </section>
+
+          <section class="module" aria-labelledby="vcf-title">
+            <h3 id="vcf-title">VCF</h3>
+            <div class="control-row three">
+              <label class="knob-control">
+                <span>Cutoff</span>
+                <input id="cutoff" type="range" min="80" max="9000" step="1" value="950" />
+              </label>
+              <label class="knob-control">
+                <span>Resonance</span>
+                <input id="resonance" type="range" min="0.1" max="18" step="0.1" value="5" />
+              </label>
+              <label class="knob-control">
+                <span>VCF Mod</span>
+                <input id="vcfMod" type="range" min="0" max="1" step="0.01" value="0.2" />
+              </label>
+            </div>
+            <label class="switch-control inline">
+              <span>VCF Mod Shape</span>
+              <select id="vcfModShape">
+                <option value="triangle">Triangle</option>
+                <option value="square">Square</option>
+              </select>
+            </label>
+          </section>
+
+          <section class="module" aria-labelledby="echo-title">
+            <h3 id="echo-title">Echo</h3>
+            <div class="control-row three">
+              <label class="knob-control">
+                <span>Echo Volume</span>
+                <input id="echoVolume" type="range" min="0" max="1" step="0.01" value="0.35" />
+              </label>
+              <label class="knob-control">
+                <span>Delay Time</span>
+                <input id="delayTime" type="range" min="0.04" max="0.68" step="0.001" value="0.24" />
+              </label>
+              <label class="knob-control">
+                <span>Echo Repeat</span>
+                <input id="echoRepeat" type="range" min="0" max="0.92" step="0.01" value="0.28" />
+              </label>
+            </div>
+            <label class="knob-control full-width">
+              <span>Echo Delay Mod</span>
+              <input id="delayMod" type="range" min="0" max="1" step="0.01" value="0.12" />
+            </label>
+            <label class="switch-control inline">
+              <span>Echo Delay Mod Shape</span>
+              <select id="delayModShape">
+                <option value="triangle">Triangle</option>
+                <option value="square">Square</option>
+              </select>
+            </label>
+          </section>
+
+          <section class="module" aria-labelledby="lfo-title">
+            <h3 id="lfo-title">LFO</h3>
+            <div class="control-row">
+              <label class="knob-control">
+                <span>LFO Rate</span>
+                <input id="lfoRate" type="range" min="0.05" max="20" step="0.01" value="1.2" />
+              </label>
+              <label class="switch-control">
+                <span>Range</span>
+                <select id="lfoRange">
+                  <option value="low">Low</option>
+                  <option value="high">High</option>
+                </select>
+              </label>
+            </div>
+            <p class="hint">One shared LFO drives filter cutoff and delay time modulation.</p>
+          </section>
+
+          <section class="module" aria-labelledby="osc-title">
+            <h3 id="osc-title">Internal Oscillator</h3>
+            <div class="control-row">
+              <label class="switch-control">
+                <span>Oscillator</span>
+                <select id="oscOn">
+                  <option value="off">Off</option>
+                  <option value="on" selected>On</option>
+                </select>
+              </label>
+              <label class="knob-control">
+                <span>Osc Rate</span>
+                <input id="oscRate" type="range" min="30" max="1400" step="1" value="130" />
+              </label>
+            </div>
+            <p class="hint">A square-wave exciter feeds the filter.</p>
+          </section>
+
+          <section class="module" aria-labelledby="output-title">
+            <h3 id="output-title">Output</h3>
+            <label class="knob-control full-width">
+              <span>Output Level</span>
+              <input id="outputLevel" type="range" min="0" max="1" step="0.01" value="0.55" />
+            </label>
+            <div class="status-box" id="statusBox">Power off</div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/js/echo-rockit.js"></script>
+</body>
+</html>
+
