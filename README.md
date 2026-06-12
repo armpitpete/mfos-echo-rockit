@@ -14,6 +14,10 @@ Build a first working prototype with:
 - LFO modulation of echo delay time
 - output level control
 
+## v0.2 goal
+
+Improve panel readability and proportions without changing audio behaviour.
+
 ## Scope rule
 
 This is not a VCV Rack module.
@@ -32,7 +36,7 @@ This repo is for the standalone browser app only.
 
 Open `index.html` in a browser.
 
-Expected v0.1 behaviour:
+Expected behaviour:
 
 - Power button starts audio.
 - Internal Oscillator on makes sound.

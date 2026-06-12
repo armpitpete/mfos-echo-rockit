@@ -23,8 +23,8 @@
       <div class="panel-body">
         <div class="panel-topline">
           <div>
-            <h2 id="panel-title">Software Prototype v0.1</h2>
-            <p>Basic Web Audio path. PT2399 dirt/noise modelling comes later.</p>
+            <h2 id="panel-title">Software Prototype v0.2</h2>
+            <p>Panel-readability pass. Audio behaviour unchanged from v0.1.</p>
           </div>
           <button class="power-button" id="powerButton" type="button" aria-pressed="false">
             <span class="lamp" aria-hidden="true"></span>
@@ -35,12 +35,12 @@
         <div class="section-grid">
           <section class="module" aria-labelledby="input-title">
             <h3 id="input-title">Input</h3>
-            <div class="control-row">
-              <label class="knob-control">
+            <div class="control-bank two">
+              <label class="panel-control">
                 <span>Input Level</span>
                 <input id="inputLevel" type="range" min="0" max="1.5" step="0.01" value="0.85" />
               </label>
-              <label class="switch-control">
+              <label class="panel-control">
                 <span>Mic / Line</span>
                 <select id="micLine">
                   <option value="line">Line</option>
@@ -53,21 +53,21 @@
 
           <section class="module" aria-labelledby="vcf-title">
             <h3 id="vcf-title">VCF</h3>
-            <div class="control-row three">
-              <label class="knob-control">
+            <div class="control-bank three">
+              <label class="panel-control">
                 <span>Cutoff</span>
                 <input id="cutoff" type="range" min="80" max="9000" step="1" value="950" />
               </label>
-              <label class="knob-control">
+              <label class="panel-control">
                 <span>Resonance</span>
                 <input id="resonance" type="range" min="0.1" max="18" step="0.1" value="5" />
               </label>
-              <label class="knob-control">
+              <label class="panel-control">
                 <span>VCF Mod</span>
                 <input id="vcfMod" type="range" min="0" max="1" step="0.01" value="0.2" />
               </label>
             </div>
-            <label class="switch-control inline">
+            <label class="panel-control select-wide">
               <span>VCF Mod Shape</span>
               <select id="vcfModShape">
                 <option value="triangle">Triangle</option>
@@ -76,27 +76,27 @@
             </label>
           </section>
 
-          <section class="module" aria-labelledby="echo-title">
+          <section class="module echo-module" aria-labelledby="echo-title">
             <h3 id="echo-title">Echo</h3>
-            <div class="control-row three">
-              <label class="knob-control">
+            <div class="control-bank three">
+              <label class="panel-control">
                 <span>Echo Volume</span>
                 <input id="echoVolume" type="range" min="0" max="1" step="0.01" value="0.35" />
               </label>
-              <label class="knob-control">
+              <label class="panel-control">
                 <span>Delay Time</span>
                 <input id="delayTime" type="range" min="0.04" max="0.68" step="0.001" value="0.24" />
               </label>
-              <label class="knob-control">
+              <label class="panel-control">
                 <span>Echo Repeat</span>
                 <input id="echoRepeat" type="range" min="0" max="0.92" step="0.01" value="0.28" />
               </label>
             </div>
-            <label class="knob-control full-width">
+            <label class="panel-control mod-strip">
               <span>Echo Delay Mod</span>
               <input id="delayMod" type="range" min="0" max="1" step="0.01" value="0.12" />
             </label>
-            <label class="switch-control inline">
+            <label class="panel-control select-wide">
               <span>Echo Delay Mod Shape</span>
               <select id="delayModShape">
                 <option value="triangle">Triangle</option>
@@ -107,12 +107,12 @@
 
           <section class="module" aria-labelledby="lfo-title">
             <h3 id="lfo-title">LFO</h3>
-            <div class="control-row">
-              <label class="knob-control">
+            <div class="control-bank two">
+              <label class="panel-control">
                 <span>LFO Rate</span>
                 <input id="lfoRate" type="range" min="0.05" max="20" step="0.01" value="1.2" />
               </label>
-              <label class="switch-control">
+              <label class="panel-control">
                 <span>Range</span>
                 <select id="lfoRange">
                   <option value="low">Low</option>
@@ -125,15 +125,15 @@
 
           <section class="module" aria-labelledby="osc-title">
             <h3 id="osc-title">Internal Oscillator</h3>
-            <div class="control-row">
-              <label class="switch-control">
+            <div class="control-bank two">
+              <label class="panel-control">
                 <span>Oscillator</span>
                 <select id="oscOn">
                   <option value="off">Off</option>
                   <option value="on" selected>On</option>
                 </select>
               </label>
-              <label class="knob-control">
+              <label class="panel-control">
                 <span>Osc Rate</span>
                 <input id="oscRate" type="range" min="30" max="1400" step="1" value="130" />
               </label>
@@ -143,7 +143,7 @@
 
           <section class="module" aria-labelledby="output-title">
             <h3 id="output-title">Output</h3>
-            <label class="knob-control full-width">
+            <label class="panel-control output-control">
               <span>Output Level</span>
               <input id="outputLevel" type="range" min="0" max="1" step="0.01" value="0.55" />
             </label>

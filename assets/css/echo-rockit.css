@@ -1,14 +1,14 @@
 ﻿:root {
   --bg: #15110c;
   --panel: #d4c29a;
+  --panel-deep: #bda66f;
   --panel-dark: #32271b;
-  --ink: #1e1913;
-  --muted: #5b4d3b;
-  --line: #79613e;
-  --socket: #17120d;
+  --ink: #1d1710;
+  --muted: #5f503b;
+  --line: #7d663f;
   --paper: #f2e8cc;
-  --accent: #b53a23;
-  --accent-soft: #f2b19e;
+  --accent: #b23a25;
+  --accent-dark: #7e2719;
   --lamp-off: #4f1f17;
   --lamp-on: #ff4f2e;
   font-family: Arial, Helvetica, sans-serif;
@@ -28,14 +28,14 @@ body {
 }
 
 .app-shell {
-  width: min(1180px, calc(100vw - 32px));
+  width: min(1160px, calc(100vw - 32px));
   margin: 0 auto;
-  padding: 32px 0 48px;
+  padding: 26px 0 42px;
 }
 
 .hero {
-  max-width: 820px;
-  margin-bottom: 24px;
+  max-width: 760px;
+  margin-bottom: 20px;
 }
 
 .eyebrow {
@@ -43,23 +43,23 @@ body {
   color: #d6b878;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.76rem;
+  font-weight: 800;
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(2.4rem, 6vw, 5.2rem);
-  line-height: 0.95;
+  font-size: clamp(2.6rem, 5.6vw, 4.9rem);
+  line-height: 0.92;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.08em;
 }
 
 .summary {
-  max-width: 760px;
+  max-width: 690px;
   color: #e4d7b8;
-  font-size: 1.05rem;
-  line-height: 1.55;
+  font-size: 1rem;
+  line-height: 1.45;
 }
 
 .panel {
@@ -95,7 +95,7 @@ h1 {
 }
 
 .panel-body {
-  padding: 22px;
+  padding: 20px;
 }
 
 .panel-topline {
@@ -104,15 +104,15 @@ h1 {
   align-items: center;
   justify-content: space-between;
   border-bottom: 3px solid var(--panel-dark);
-  padding-bottom: 18px;
-  margin-bottom: 18px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
 }
 
 .panel-topline h2 {
   margin: 0 0 4px;
-  font-size: 1.4rem;
+  font-size: 1.28rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
 }
 
 .panel-topline p {
@@ -124,13 +124,13 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  min-width: 128px;
+  min-width: 126px;
   justify-content: center;
   border: 3px solid var(--panel-dark);
   background: #251b13;
   color: var(--paper);
-  padding: 13px 18px;
-  font-weight: 800;
+  padding: 12px 18px;
+  font-weight: 900;
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -160,77 +160,142 @@ h1 {
 }
 
 .module {
-  min-height: 220px;
+  min-height: 206px;
   border: 3px solid var(--line);
-  background: linear-gradient(180deg, #e6d4a9, #c7b17d);
-  padding: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.13), transparent 28%),
+    linear-gradient(180deg, #e1cf9c, #c9b379);
+  padding: 14px;
 }
 
 .module h3 {
   margin: 0 0 14px;
   padding-bottom: 8px;
-  border-bottom: 2px solid rgba(50, 39, 27, 0.6);
+  border-bottom: 2px solid rgba(50, 39, 27, 0.55);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 1rem;
+  letter-spacing: 0.14em;
+  font-size: 0.95rem;
 }
 
-.control-row {
+.control-bank {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 13px;
+  align-items: start;
 }
 
-.control-row.three {
+.control-bank.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.control-bank.three {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.knob-control,
-.switch-control {
+.panel-control {
   display: grid;
-  gap: 8px;
-  align-content: start;
-  font-weight: 800;
-  font-size: 0.78rem;
+  gap: 7px;
+  min-width: 0;
+  font-weight: 900;
+  font-size: 0.73rem;
+  line-height: 1.15;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
-.knob-control.full-width,
-.switch-control.inline {
-  margin-top: 14px;
+.panel-control span {
+  display: block;
+  min-height: 1.8em;
+  overflow-wrap: normal;
+}
+
+.select-wide,
+.mod-strip,
+.output-control {
+  margin-top: 13px;
 }
 
 input[type="range"] {
   width: 100%;
-  accent-color: var(--accent);
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 5px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, var(--accent) 0 50%, #d9dfdc 50% 100%);
+  border: 1px solid rgba(50, 39, 27, 0.35);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -7px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-dark);
+  background:
+    radial-gradient(circle at 34% 30%, #d26b52 0 18%, var(--accent) 19% 62%, var(--accent-dark) 63% 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.25), 0 1px 3px rgba(0,0,0,0.4);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 5px;
+  border-radius: 999px;
+  background: #d9dfdc;
+  border: 1px solid rgba(50, 39, 27, 0.35);
+}
+
+input[type="range"]::-moz-range-progress {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-dark);
+  background: var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
 select {
   width: 100%;
   border: 2px solid var(--panel-dark);
-  background: var(--paper);
+  background: #eee4c8;
   color: var(--ink);
-  padding: 8px;
-  font-weight: 800;
+  padding: 8px 10px;
+  min-height: 36px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
 }
 
 .hint {
-  margin: 14px 0 0;
+  margin: 13px 0 0;
   color: var(--muted);
-  font-size: 0.86rem;
-  line-height: 1.4;
+  font-size: 0.84rem;
+  line-height: 1.38;
 }
 
 .status-box {
-  margin-top: 18px;
-  min-height: 56px;
+  margin-top: 16px;
+  min-height: 58px;
   border: 2px solid var(--panel-dark);
   background: #211811;
   color: var(--paper);
   padding: 12px;
   font-family: Consolas, "Courier New", monospace;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
 }
 
 @media (max-width: 900px) {
@@ -255,8 +320,8 @@ select {
 }
 
 @media (max-width: 560px) {
-  .control-row,
-  .control-row.three {
+  .control-bank.two,
+  .control-bank.three {
     grid-template-columns: 1fr;
   }
 }
