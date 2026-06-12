@@ -4,13 +4,13 @@ Browser-based software version of the MFOS Echo Rockit sound producer / processo
 
 ## Current status
 
-**Current version: v0.8 Stable Prototype candidate**
+**Current version: v0.8 Stable Prototype**
 
-This repo is now in a stabilisation phase.
+The v0.8 test gates have passed.
 
-Do not add new features until the v0.8 test gates are complete.
+This repo is now in a feature freeze unless a specific bug is found.
 
-Open test-gate issues:
+Closed test-gate issues:
 
 - #8 — VCF Cutoff closes properly at minimum
 - #9 — Basic MIDI input/output
@@ -87,46 +87,46 @@ For audio-only testing, most modern browsers should work.
 
 For MIDI testing, use a browser with Web MIDI support, such as Chrome or Edge. Browser support is not equal across all browsers.
 
-## v0.8 test checklist
+## v0.8 passed test checklist
 
 ### Audio stability
 
-- [ ] Power button starts audio.
-- [ ] Internal Oscillator on makes sound.
-- [ ] Cutoff at minimum is nearly silent.
-- [ ] Raising Cutoff opens smoothly.
-- [ ] RES high produces self-resonance.
-- [ ] VCF Mod moves the filter and resonance pitch.
-- [ ] Delay Time changes the echo timing.
-- [ ] Echo Volume changes the wet level.
-- [ ] Echo Repeat changes feedback without a dangerous volume blast.
-- [ ] Long delay is darker/rougher than short delay.
-- [ ] Delay grain does not hiss when Cutoff is closed.
+- [x] Power button starts audio.
+- [x] Internal Oscillator on makes sound.
+- [x] Cutoff at minimum is nearly silent.
+- [x] Raising Cutoff opens smoothly.
+- [x] RES high produces self-resonance.
+- [x] VCF Mod moves the filter and resonance pitch.
+- [x] Delay Time changes the echo timing.
+- [x] Echo Volume changes the wet level.
+- [x] Echo Repeat changes feedback without a dangerous volume blast.
+- [x] Long delay is darker/rougher than short delay.
+- [x] Delay grain does not hiss when Cutoff is closed.
 
 ### MIDI In / Out
 
-- [ ] Enable MIDI requests permission.
-- [ ] MIDI In selector populates.
-- [ ] MIDI Out selector populates when an output exists.
-- [ ] MIDI Note On plays the internal oscillator at the incoming note pitch.
-- [ ] MIDI Note Off stops the MIDI-triggered sound.
-- [ ] Velocity changes strength slightly.
-- [ ] CC 74 moves Cutoff.
-- [ ] CC 71 moves RES.
-- [ ] CC 12 moves Echo Volume.
-- [ ] CC 13 moves Echo Repeat.
-- [ ] CC 1 moves VCF Mod.
-- [ ] Incoming notes/CCs pass through to selected MIDI Out.
+- [x] Enable MIDI requests permission.
+- [x] MIDI In selector populates.
+- [x] MIDI Out selector populates when an output exists.
+- [x] MIDI Note On plays the internal oscillator at the incoming note pitch.
+- [x] MIDI Note Off stops the MIDI-triggered sound.
+- [x] Velocity changes strength slightly.
+- [x] CC 74 moves Cutoff.
+- [x] CC 71 moves RES.
+- [x] CC 12 moves Echo Volume.
+- [x] CC 13 moves Echo Repeat.
+- [x] CC 1 moves VCF Mod.
+- [x] Incoming notes/CCs pass through to selected MIDI Out.
 
 ### MIDI Learn
 
-- [ ] Choose a Learn Target.
-- [ ] Press Learn Next CC.
-- [ ] Move a MIDI knob/fader.
-- [ ] That CC controls the chosen target.
-- [ ] Refreshing the page keeps the learned mapping.
-- [ ] Clear Learned CCs removes learned mappings.
-- [ ] Default CC behaviour works again after clearing.
+- [x] Choose a Learn Target.
+- [x] Press Learn Next CC.
+- [x] Move a MIDI knob/fader.
+- [x] That CC controls the chosen target.
+- [x] Refreshing the page keeps the learned mapping.
+- [x] Clear Learned CCs removes learned mappings.
+- [x] Default CC behaviour works again after clearing.
 
 ## Known limits
 
@@ -140,11 +140,22 @@ For MIDI testing, use a browser with Web MIDI support, such as Chrome or Edge. B
 
 ## Freeze rule
 
-The next milestone is **v0.8 Stable Prototype**, not another feature version.
+The current milestone is **v0.8 Stable Prototype**.
 
-Only do bug fixes, tests, and documentation until:
+Do not add another feature version unless there is a clear new issue and a specific reason to break the freeze.
 
-- #8 is tested and closed
-- #9 is tested and closed
-- #10 is tested and closed
-- #11 is closed as the v0.8 freeze record
+Allowed work during freeze:
+
+- bug fixes
+- small documentation corrections
+- compatibility fixes
+- safety fixes
+
+Avoid during freeze:
+
+- MIDI clock
+- presets
+- panel redesign
+- more echo modelling
+- sequencer sync
+- framework conversion
