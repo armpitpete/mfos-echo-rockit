@@ -15,6 +15,12 @@ const state = {
   feedback: null,
   wetGain: null,
   outputGain: null,
+  midiAccess: null,
+  midiInput: null,
+  midiOutput: null,
+  midiEnabled: false,
+  midiNote: null,
+  midiVelocity: 0,
   lfoPhase: 0,
   wobblePhase: 0,
   lfoTimer: null,
@@ -42,6 +48,10 @@ const controls = {
   oscOn: $("oscOn"),
   oscRate: $("oscRate"),
   outputLevel: $("outputLevel"),
+  midiEnableButton: $("midiEnableButton"),
+  midiInSelect: $("midiInSelect"),
+  midiOutSelect: $("midiOutSelect"),
+  midiStatus: $("midiStatus"),
 };
 
 function number(control) {
@@ -51,6 +61,24 @@ function number(control) {
 function smoothstep(value) {
   const clamped = Math.max(0, Math.min(1, value));
   return clamped * clamped * (3 - 2 * clamped);
+}
+
+function midiNoteToFrequency(note) {
+  return 440 * Math.pow(2, (note - 69) / 12);
+}
+
+function setMidiStatus(message) {
+  if (controls.midiStatus) {
+    controls.midiStatus.textContent = message;
+  }
+}
+
+function setControlFromMidi(control, value) {
+  const min = Number(control.min ?? 0);
+  const max = Number(control.max ?? 1);
+  const scaled = min + (value / 127) * (max - min);
+  control.value = String(scaled);
+  control.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 function createNoiseSource(ctx) {
@@ -171,7 +199,11 @@ function applyControls() {
 
   const now = state.ctx.currentTime;
   const micBoost = controls.micLine.value === "mic" ? 4 : 1;
-  const oscEnabled = controls.oscOn.value === "on" ? 1 : 0;
+  const manualOscEnabled = controls.oscOn.value === "on" ? 1 : 0;
+  const midiActive = state.midiEnabled && state.midiNote !== null;
+  const oscGate = state.midiEnabled ? (midiActive ? 1 : 0) : manualOscEnabled;
+  const velocityGain = state.midiEnabled ? Math.max(0.2, state.midiVelocity) : 1;
+  const oscFrequency = midiActive ? midiNoteToFrequency(state.midiNote) : number(controls.oscRate);
 
   const vcfLfo = lfoValue(controls.vcfModShape.value, state.lfoPhase) * number(controls.vcfMod);
   const delayLfo = lfoValue(controls.delayModShape.value, state.lfoPhase) * number(controls.delayMod);
@@ -195,12 +227,12 @@ function applyControls() {
   const noiseGrainGain = grainAmount * vcfOpen * (0.0015 + safeRepeat * 0.0025);
   const noiseToneHz = 950 + darkness * 1700;
 
-  state.osc.frequency.setTargetAtTime(number(controls.oscRate), now, 0.015);
+  state.osc.frequency.setTargetAtTime(oscFrequency, now, 0.015);
   state.resOsc.frequency.setTargetAtTime(moddedCutoff, now, 0.02);
   state.resGain.gain.setTargetAtTime(selfResGain, now, 0.025);
   state.noiseFilter.frequency.setTargetAtTime(noiseToneHz, now, 0.05);
   state.noiseGain.gain.setTargetAtTime(noiseGrainGain, now, 0.05);
-  state.inputGain.gain.setTargetAtTime(number(controls.inputLevel) * micBoost * oscEnabled * 0.18, now, 0.015);
+  state.inputGain.gain.setTargetAtTime(number(controls.inputLevel) * micBoost * oscGate * velocityGain * 0.18, now, 0.015);
   state.filter.frequency.setTargetAtTime(moddedCutoff, now, 0.02);
   state.filter.Q.setTargetAtTime(resAmount, now, 0.02);
   state.vcfCloseGain.gain.setTargetAtTime(vcfOpen, now, 0.025);
@@ -267,6 +299,137 @@ function powerOff() {
   controls.statusBox.textContent = "Power off";
 }
 
+function populateMidiDevices() {
+  if (!state.midiAccess) return;
+
+  const currentInputId = controls.midiInSelect.value;
+  const currentOutputId = controls.midiOutSelect.value;
+
+  controls.midiInSelect.innerHTML = '<option value="">No MIDI input</option>';
+  controls.midiOutSelect.innerHTML = '<option value="">No MIDI output</option>';
+
+  state.midiAccess.inputs.forEach((input) => {
+    const option = document.createElement("option");
+    option.value = input.id;
+    option.textContent = input.name || `Input ${input.id}`;
+    controls.midiInSelect.appendChild(option);
+  });
+
+  state.midiAccess.outputs.forEach((output) => {
+    const option = document.createElement("option");
+    option.value = output.id;
+    option.textContent = output.name || `Output ${output.id}`;
+    controls.midiOutSelect.appendChild(option);
+  });
+
+  if (currentInputId && state.midiAccess.inputs.has(currentInputId)) {
+    controls.midiInSelect.value = currentInputId;
+  }
+
+  if (currentOutputId && state.midiAccess.outputs.has(currentOutputId)) {
+    controls.midiOutSelect.value = currentOutputId;
+  }
+
+  selectMidiInput();
+  selectMidiOutput();
+}
+
+function selectMidiInput() {
+  if (state.midiInput) {
+    state.midiInput.onmidimessage = null;
+  }
+
+  const inputId = controls.midiInSelect.value;
+  state.midiInput = inputId && state.midiAccess ? state.midiAccess.inputs.get(inputId) : null;
+
+  if (state.midiInput) {
+    state.midiInput.onmidimessage = handleMidiMessage;
+    setMidiStatus(`MIDI in: ${state.midiInput.name || "selected"}`);
+  }
+}
+
+function selectMidiOutput() {
+  const outputId = controls.midiOutSelect.value;
+  state.midiOutput = outputId && state.midiAccess ? state.midiAccess.outputs.get(outputId) : null;
+
+  if (state.midiOutput) {
+    setMidiStatus(`MIDI out: ${state.midiOutput.name || "selected"}`);
+  }
+}
+
+function handleMidiMessage(message) {
+  const data = Array.from(message.data);
+  const [status, data1, data2 = 0] = data;
+  const command = status & 0xf0;
+
+  if (state.midiOutput && (command === 0x90 || command === 0x80 || command === 0xb0)) {
+    state.midiOutput.send(data);
+  }
+
+  if (command === 0x90 && data2 > 0) {
+    state.midiNote = data1;
+    state.midiVelocity = data2 / 127;
+    setMidiStatus(`Note on ${data1} | velocity ${data2}`);
+    applyControls();
+    return;
+  }
+
+  if (command === 0x80 || (command === 0x90 && data2 === 0)) {
+    if (state.midiNote === data1) {
+      state.midiNote = null;
+      state.midiVelocity = 0;
+    }
+    setMidiStatus(`Note off ${data1}`);
+    applyControls();
+    return;
+  }
+
+  if (command === 0xb0) {
+    handleMidiCc(data1, data2);
+  }
+}
+
+function handleMidiCc(controller, value) {
+  const ccMap = {
+    1: controls.vcfMod,
+    12: controls.echoVolume,
+    13: controls.echoRepeat,
+    71: controls.resonance,
+    74: controls.cutoff,
+  };
+
+  const control = ccMap[controller];
+
+  if (!control) {
+    setMidiStatus(`CC ${controller} received`);
+    return;
+  }
+
+  setControlFromMidi(control, value);
+  setMidiStatus(`CC ${controller} -> ${control.id}`);
+}
+
+async function enableMidi() {
+  if (!navigator.requestMIDIAccess) {
+    setMidiStatus("Web MIDI not supported in this browser");
+    return;
+  }
+
+  try {
+    state.midiAccess = await navigator.requestMIDIAccess({ sysex: false });
+    state.midiEnabled = true;
+    controls.midiEnableButton.setAttribute("aria-pressed", "true");
+    controls.midiInSelect.disabled = false;
+    controls.midiOutSelect.disabled = false;
+    state.midiAccess.onstatechange = populateMidiDevices;
+    populateMidiDevices();
+    setMidiStatus("MIDI enabled. Select input/output.");
+    applyControls();
+  } catch (error) {
+    setMidiStatus(`MIDI blocked: ${error.message}`);
+  }
+}
+
 controls.powerButton.addEventListener("click", () => {
   if (state.powered) {
     powerOff();
@@ -275,8 +438,20 @@ controls.powerButton.addEventListener("click", () => {
   }
 });
 
+if (controls.midiEnableButton) {
+  controls.midiEnableButton.addEventListener("click", enableMidi);
+}
+
+if (controls.midiInSelect) {
+  controls.midiInSelect.addEventListener("change", selectMidiInput);
+}
+
+if (controls.midiOutSelect) {
+  controls.midiOutSelect.addEventListener("change", selectMidiOutput);
+}
+
 Object.values(controls).forEach((control) => {
-  if (!control || control === controls.powerButton || control === controls.statusBox) return;
+  if (!control || control === controls.powerButton || control === controls.statusBox || control === controls.midiEnableButton || control === controls.midiStatus) return;
   control.addEventListener("input", applyControls);
   control.addEventListener("change", applyControls);
 });
