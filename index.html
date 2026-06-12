@@ -11,7 +11,7 @@
     <header class="hero">
       <p class="eyebrow">MFOS-inspired software instrument</p>
       <h1>Echo Rockit</h1>
-      <p class="summary">A compact browser sound producer / processor with input level, resonant low-pass filter, echo, LFO modulation, internal square oscillator, and basic MIDI in/out.</p>
+      <p class="summary">A compact browser sound producer / processor with input level, resonant low-pass filter, echo, LFO modulation, internal square oscillator, MIDI in/out, and MIDI Learn.</p>
     </header>
 
     <section class="panel" aria-labelledby="panel-title">
@@ -23,8 +23,8 @@
       <div class="panel-body">
         <div class="panel-topline">
           <div>
-            <h2 id="panel-title">Software Prototype v0.7</h2>
-            <p>Basic MIDI input/output added to the darker moving echo path.</p>
+            <h2 id="panel-title">Software Prototype v0.8</h2>
+            <p>MIDI Learn added for assigning incoming CC messages to panel controls.</p>
           </div>
           <button class="power-button" id="powerButton" type="button" aria-pressed="false">
             <span class="lamp" aria-hidden="true"></span>
@@ -157,6 +157,26 @@
                   <option value="">No MIDI output</option>
                 </select>
               </label>
+            </div>
+            <label class="panel-control select-wide">
+              <span>Learn Target</span>
+              <select id="midiLearnTarget">
+                <option value="cutoff">Cutoff</option>
+                <option value="resonance">RES</option>
+                <option value="echoVolume">Echo Volume</option>
+                <option value="delayTime">Delay Time</option>
+                <option value="echoRepeat">Echo Repeat</option>
+                <option value="vcfMod">VCF Mod</option>
+                <option value="delayMod">Echo Delay Mod</option>
+                <option value="lfoRate">LFO Rate</option>
+                <option value="oscRate">Osc Rate</option>
+                <option value="inputLevel">Input Level</option>
+                <option value="outputLevel">Output Level</option>
+              </select>
+            </label>
+            <div class="midi-learn-actions">
+              <button class="midi-button midi-button-secondary" id="midiLearnButton" type="button" aria-pressed="false">Learn Next CC</button>
+              <button class="midi-button midi-button-secondary" id="midiClearLearnButton" type="button">Clear Learned CCs</button>
             </div>
             <div class="status-box midi-status" id="midiStatus">MIDI off</div>
           </section>
