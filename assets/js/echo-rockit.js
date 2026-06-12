@@ -1,7 +1,9 @@
 const state = {
   ctx: null,
   osc: null,
+  resOsc: null,
   inputGain: null,
+  resGain: null,
   filter: null,
   dryGain: null,
   delay: null,
@@ -49,7 +51,13 @@ function createAudioGraph() {
   const osc = ctx.createOscillator();
   osc.type = "square";
 
+  const resOsc = ctx.createOscillator();
+  resOsc.type = "sine";
+
   const inputGain = ctx.createGain();
+  const resGain = ctx.createGain();
+  resGain.gain.value = 0;
+
   const filter = ctx.createBiquadFilter();
   filter.type = "lowpass";
 
@@ -67,6 +75,9 @@ function createAudioGraph() {
   osc.connect(inputGain);
   inputGain.connect(filter);
 
+  resOsc.connect(resGain);
+  resGain.connect(filter);
+
   filter.connect(dryGain);
   dryGain.connect(outputGain);
 
@@ -80,10 +91,13 @@ function createAudioGraph() {
   outputGain.connect(ctx.destination);
 
   osc.start();
+  resOsc.start();
 
   state.ctx = ctx;
   state.osc = osc;
+  state.resOsc = resOsc;
   state.inputGain = inputGain;
+  state.resGain = resGain;
   state.filter = filter;
   state.dryGain = dryGain;
   state.delay = delay;
@@ -117,6 +131,9 @@ function applyControls() {
 
   const baseCutoff = number(controls.cutoff);
   const moddedCutoff = Math.max(60, Math.min(12000, baseCutoff + vcfLfo * 4200));
+  const resAmount = number(controls.resonance);
+  const selfResAmount = Math.max(0, Math.min(1, (resAmount - 13) / 5));
+  const selfResGain = selfResAmount * selfResAmount * 0.055;
 
   const baseDelay = number(controls.delayTime);
   const cleanDelay = Math.max(0.02, Math.min(1.0, baseDelay + delayLfo * 0.12));
@@ -128,9 +145,11 @@ function applyControls() {
   const safeRepeat = Math.min(number(controls.echoRepeat), 0.78);
 
   state.osc.frequency.setTargetAtTime(number(controls.oscRate), now, 0.015);
+  state.resOsc.frequency.setTargetAtTime(moddedCutoff, now, 0.02);
+  state.resGain.gain.setTargetAtTime(selfResGain, now, 0.025);
   state.inputGain.gain.setTargetAtTime(number(controls.inputLevel) * micBoost * oscEnabled * 0.18, now, 0.015);
   state.filter.frequency.setTargetAtTime(moddedCutoff, now, 0.02);
-  state.filter.Q.setTargetAtTime(number(controls.resonance), now, 0.02);
+  state.filter.Q.setTargetAtTime(resAmount, now, 0.02);
   state.delay.delayTime.setTargetAtTime(moddedDelay, now, 0.04);
   state.delayTone.frequency.setTargetAtTime(delayToneHz, now, 0.04);
   state.feedback.gain.setTargetAtTime(safeRepeat, now, 0.02);
