@@ -1,10 +1,11 @@
-﻿const state = {
+const state = {
   ctx: null,
   osc: null,
   inputGain: null,
   filter: null,
   dryGain: null,
   delay: null,
+  delayTone: null,
   feedback: null,
   wetGain: null,
   outputGain: null,
@@ -53,6 +54,11 @@ function createAudioGraph() {
 
   const dryGain = ctx.createGain();
   const delay = ctx.createDelay(1.2);
+  const delayTone = ctx.createBiquadFilter();
+  delayTone.type = "lowpass";
+  delayTone.frequency.value = 3600;
+  delayTone.Q.value = 0.65;
+
   const feedback = ctx.createGain();
   const wetGain = ctx.createGain();
   const outputGain = ctx.createGain();
@@ -64,9 +70,10 @@ function createAudioGraph() {
   dryGain.connect(outputGain);
 
   filter.connect(delay);
-  delay.connect(feedback);
+  delay.connect(delayTone);
+  delayTone.connect(feedback);
   feedback.connect(delay);
-  delay.connect(wetGain);
+  delayTone.connect(wetGain);
   wetGain.connect(outputGain);
 
   outputGain.connect(ctx.destination);
@@ -79,6 +86,7 @@ function createAudioGraph() {
   state.filter = filter;
   state.dryGain = dryGain;
   state.delay = delay;
+  state.delayTone = delayTone;
   state.feedback = feedback;
   state.wetGain = wetGain;
   state.outputGain = outputGain;
@@ -111,13 +119,17 @@ function applyControls() {
 
   const baseDelay = number(controls.delayTime);
   const moddedDelay = Math.max(0.02, Math.min(1.0, baseDelay + delayLfo * 0.12));
+  const darkness = moddedDelay / 0.68;
+  const delayToneHz = Math.max(850, 5200 - darkness * 3600);
+  const safeRepeat = Math.min(number(controls.echoRepeat), 0.78);
 
   state.osc.frequency.setTargetAtTime(number(controls.oscRate), now, 0.015);
   state.inputGain.gain.setTargetAtTime(number(controls.inputLevel) * micBoost * oscEnabled * 0.18, now, 0.015);
   state.filter.frequency.setTargetAtTime(moddedCutoff, now, 0.02);
   state.filter.Q.setTargetAtTime(number(controls.resonance), now, 0.02);
   state.delay.delayTime.setTargetAtTime(moddedDelay, now, 0.02);
-  state.feedback.gain.setTargetAtTime(number(controls.echoRepeat), now, 0.02);
+  state.delayTone.frequency.setTargetAtTime(delayToneHz, now, 0.04);
+  state.feedback.gain.setTargetAtTime(safeRepeat, now, 0.02);
   state.wetGain.gain.setTargetAtTime(number(controls.echoVolume), now, 0.02);
   state.dryGain.gain.setTargetAtTime(0.65, now, 0.02);
   state.outputGain.gain.setTargetAtTime(number(controls.outputLevel), now, 0.02);
@@ -190,4 +202,3 @@ Object.values(controls).forEach((control) => {
   control.addEventListener("input", applyControls);
   control.addEventListener("change", applyControls);
 });
-
