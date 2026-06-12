@@ -10,6 +10,7 @@ const state = {
   wetGain: null,
   outputGain: null,
   lfoPhase: 0,
+  wobblePhase: 0,
   lfoTimer: null,
   powered: false,
 };
@@ -118,7 +119,10 @@ function applyControls() {
   const moddedCutoff = Math.max(60, Math.min(12000, baseCutoff + vcfLfo * 4200));
 
   const baseDelay = number(controls.delayTime);
-  const moddedDelay = Math.max(0.02, Math.min(1.0, baseDelay + delayLfo * 0.12));
+  const cleanDelay = Math.max(0.02, Math.min(1.0, baseDelay + delayLfo * 0.12));
+  const wobbleDepth = Math.max(0, Math.min(1, (cleanDelay - 0.12) / 0.56));
+  const wobble = Math.sin(state.wobblePhase * Math.PI * 2) * 0.006 * wobbleDepth;
+  const moddedDelay = Math.max(0.02, Math.min(1.0, cleanDelay + wobble));
   const darkness = moddedDelay / 0.68;
   const delayToneHz = Math.max(850, 5200 - darkness * 3600);
   const safeRepeat = Math.min(number(controls.echoRepeat), 0.78);
@@ -127,7 +131,7 @@ function applyControls() {
   state.inputGain.gain.setTargetAtTime(number(controls.inputLevel) * micBoost * oscEnabled * 0.18, now, 0.015);
   state.filter.frequency.setTargetAtTime(moddedCutoff, now, 0.02);
   state.filter.Q.setTargetAtTime(number(controls.resonance), now, 0.02);
-  state.delay.delayTime.setTargetAtTime(moddedDelay, now, 0.02);
+  state.delay.delayTime.setTargetAtTime(moddedDelay, now, 0.04);
   state.delayTone.frequency.setTargetAtTime(delayToneHz, now, 0.04);
   state.feedback.gain.setTargetAtTime(safeRepeat, now, 0.02);
   state.wetGain.gain.setTargetAtTime(number(controls.echoVolume), now, 0.02);
@@ -154,6 +158,7 @@ function startLfo() {
     const rate = rateBase * rangeFactor;
 
     state.lfoPhase = (state.lfoPhase + elapsedSeconds * rate) % 1;
+    state.wobblePhase = (state.wobblePhase + elapsedSeconds * 0.23) % 1;
     applyControls();
   }, 24);
 }
